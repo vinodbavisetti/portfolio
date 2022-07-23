@@ -1,0 +1,63 @@
+.page-block{
+  position: relative;
+  height: 100vh;
+  &:nth-child(1){
+    background: url(/assets/images/image1.jpg) center/cover;
+    color: white;
+  }
+  &:nth-child(2){
+    background: url(/assets/images/image2.jpg) center/cover;
+    color: white;
+  }
+  &:nth-child(3){
+    background: url(/assets/images/image3.jpg) center/cover;
+    color:white;
+  }
+  & .content{
+    backdrop-filter: blur(6px);
+    height: 100%;
+  }
+}
+
+.anime1{
+  position: absolute;
+  bottom: 20vh;
+  text-shadow: 0 0 4px;
+  animation: up-down 1s linear infinite forwards;
+}
+
+@keyframes up-down {
+  0%{
+    transform: translateY(-2px);
+  }
+  50%{
+    transform: translateY(2px);
+  }
+  100%{
+    transform: translateY(-2px);
+  }
+}
+
+@mixin tech($font-size:1rem) {
+  $size: 6em;
+  width: $size;
+  min-width: min-content;
+  font-size: $font-size;
+  height: $size;
+  background-color: rgba(256,256,256, 0.3);
+  box-shadow: 0 0 6px white;
+  border-radius: 3px;
+  // text-center
+  display: grid;
+  place-items: center;
+  text-align: center;
+  // -----------
+}
+
+.big-tech{
+  @include tech()
+}
+
+.small-tech{
+  @include tech(.7rem)
+}
