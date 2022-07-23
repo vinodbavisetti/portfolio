@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, HostListener, OnInit } from '@angular/core';
-import { exhaustMap, Subject, take, timer } from 'rxjs';
+import { NEVER, Subject, switchMap, timer } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -9,13 +9,12 @@ import { exhaustMap, Subject, take, timer } from 'rxjs';
 export class AppComponent implements OnInit, AfterViewInit {
   lastScrollPosition: number;
   noOfBlocks = 0;
-  noScrollFlag = false;
+  dontScrollFlag = false;
 
   scrollHandlerObservable = new Subject<null>();
 
   @HostListener('document:scroll', ['$event'])
   onScroll(e: MouseEvent) {
-    e.preventDefault();
     this.scrollHandlerObservable.next(null);
   }
 
@@ -29,53 +28,41 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   scrollHandler() {
+    let scrollIndex: number;
+    let scrollDirection: 'up' | 'down';
     this.scrollHandlerObservable.pipe(
-      exhaustMap(() => {
-        return timer(0, 1000).pipe(take(2));
-      }),
-    ).subscribe({
-      next: (value) => {
+      switchMap(() => {
         const scrollPosition = document.documentElement.scrollTop;
         if (this.lastScrollPosition === scrollPosition) {
-          return;
+          return NEVER;
         }
-        const scrollIndex = ~~(scrollPosition / innerHeight);
-        if (value === 0) {
-          const scrollDirection = this.lastScrollPosition > scrollPosition ? 'up' : 'down';
-          if (scrollDirection === 'down') {
-            this.goToThatBlock(scrollIndex + 1);
-          } else {
-            this.goToThatBlock(scrollIndex);
-          }    
-        } else if(value === 1) {
-          const remainder = scrollPosition % innerHeight;
-          if (remainder >= (innerHeight / 2)) {
-            this.goToThatBlock(scrollIndex + 1);
-            // window.scrollBy({
-            //   top: innerHeight - remainder,
-            //   behavior: 'smooth',
-            // })
-          } else {
-            this.goToThatBlock(scrollIndex);
-            // window.scrollBy({
-            //   top: -remainder,
-            //   behavior: 'smooth',
-            // })
-          }
-        }
+        scrollIndex = ~~(scrollPosition / innerHeight);
+        scrollDirection = this.lastScrollPosition > scrollPosition ? 'up' : 'down';
         this.lastScrollPosition = scrollPosition;
+        const remainder = Math.floor(scrollPosition % innerHeight) == 0;
+        if (this.dontScrollFlag || remainder) {
+          return NEVER; 
+        }
+        console.log('----')
+        return timer(400);
+      })
+    ).subscribe({
+      next: () => {
+        if (scrollDirection === 'down') {
+          this.goToThatBlock(scrollIndex + 1);
+        } else {
+          this.goToThatBlock(scrollIndex);
+        } 
       }
     })
   }
 
-  goToThatBlock(index: number) {
+  goToThatBlock(index: number, dontScrollFlag = false) {
+    this.dontScrollFlag = dontScrollFlag;
+    timer(600).subscribe(() => this.dontScrollFlag = false);
     if (index >= 0 && index < this.noOfBlocks) {
-      if (this.noScrollFlag) { return; }
-      console.log(index)
       const scrollTo = (document.querySelectorAll('.page-block')[index] as HTMLElement).offsetTop;
       window.scrollTo({ top: scrollTo, behavior: 'smooth' });
-      this.noScrollFlag = true;
-      timer(500).subscribe(() => { this.noScrollFlag = false; })
     }
   }
 
