@@ -39,15 +39,16 @@ export class AppComponent implements OnInit, AfterViewInit {
         scrollIndex = ~~(scrollPosition / innerHeight);
         scrollDirection = this.lastScrollPosition > scrollPosition ? 'up' : 'down';
         this.lastScrollPosition = scrollPosition;
-        const remainder = Math.floor(scrollPosition % innerHeight) == 0;
-        if (this.dontScrollFlag || remainder) {
+        if (this.dontScrollFlag) {
           return NEVER; 
         }
-        console.log('----')
         return timer(400);
       })
     ).subscribe({
       next: () => {
+        if (Math.floor(document.documentElement.scrollTop % innerHeight) == 0) {
+          return;
+        }
         if (scrollDirection === 'down') {
           this.goToThatBlock(scrollIndex + 1);
         } else {
@@ -59,7 +60,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   goToThatBlock(index: number, dontScrollFlag = false) {
     this.dontScrollFlag = dontScrollFlag;
-    timer(600).subscribe(() => this.dontScrollFlag = false);
+    timer(800).subscribe(() => this.dontScrollFlag = false);
     if (index >= 0 && index < this.noOfBlocks) {
       const scrollTo = (document.querySelectorAll('.page-block')[index] as HTMLElement).offsetTop;
       window.scrollTo({ top: scrollTo, behavior: 'smooth' });
